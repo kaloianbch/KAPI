@@ -1,265 +1,165 @@
---[Constants]--
-startingDir = 0 -- Always place Turtle facing South
-toolHand = "left" -- side of the turtle with the tool
+if not (os.loadAPI("KAPI")) then
+    error("Could not load KAPI")
+end
+
+KAPI.setProgName("AmMnr")
+--KAPI.setStartingCard(0)
+--KAPI.setMoveTimeout(10)
+--KAPI.setToolHand("left")
+--KAPI.setStorageBlockID("minecraft:chest")
+
+--[Constansts]--
+
 --[Globals]--
-facingDir = startingDir
-invFull = false
-failedToDig = false
-isUnloading = false
-offsetY = 0
-originX,originY,originZ = gps.locate(10)
+depthDir = 1
+length = 0
+width = 0
+depth = 0
+doWork = true
+offsetDepth = 0
+firstTurnCardArg = 3    --defalut dig to the left of start
+turnCard = nil
+unloadDir = 2
+
 --[Functions]--
-function forward(count) -- go forwards this amount, will remove obstacles.
-    for i = 1,count,1  do
-        if not (turtle.forward()) then
-            repeat
-                turtle.attack(toolHand)
-                dig(0)
-                if(failedToDig and not invFull) then
-                    failedToDig = false
-                    unload(false)
-                    print("TASK COMPLETE: I've been a miner o7")
-                    error("Failed to Dig")
-                elseif(invFull) then
-                    invFull = false
-                    unload(true)
-                end
-                local didGoFwd = turtle.forward()
-            until (didGoFwd)
+function miner() -- Main function
+    turnCard = KAPI.sanitizeCard(turnCard + 2)
+    for i = 1,width,1 do
+        for j = 2,length,1 do
+            checkInv()
+            moveHardWrap(0)
         end
-    end
-end
-
-function down(count) -- go down this amount, will remove obstacles.
-    for i = 1,count,1  do
-        if not (turtle.down()) then
-            repeat
-                turtle.attackDown(toolHand)
-                dig(1)
-                if(failedToDig and not invFull) then
-                    failedToDig = false
-                    unload(false)
-                    print("TASK COMPLETE: I've been a miner o7")
-                    error("Failed to Dig")
-                elseif(invFull) then
-                    invFull = false
-                    unload(true)
-                end
-                local didGoDown = turtle.down()
-            until (didGoDown)
-        end
-    end
-end
-
-function up(count) -- go up this amount, will remove obstacles.
-    for i = 1,count,1  do
-        if not (turtle.up()) then
-            repeat
-                turtle.attackUp(toolHand)
-                dig(2)
-                if(failedToDig) then
-                    failedToDig = false
-                    error("Stuck, send help(Couldn't dig up)")
-                end
-                local didGoUp = turtle.up()
-            until (didGoUp)
-        end
-    end
-end
-
-function dig(dir)	-- dig in a direction if block is present (0 = dig in front, 1 = dig down, 2 = dig up)
-    if (turtle.getItemCount(16) > 0 and not isUnloading) then
-        invFull = true
-    else
-        if (dir == 0) then
-            if (turtle.detect) then
-                if not(turtle.dig(toolHand)) then
-                    failedToDig = true
-                end
-            end
-        end
-        if (dir == 1) then
-            if (turtle.detectDown) then
-                if not(turtle.digDown(toolHand)) then
-                    failedToDig = true
-                end
-            end
-        end    
-        if (dir == 2) then
-            if (turtle.detectUp) then
-                if not(turtle.digUp(toolHand)) then
-                    failedToDig = true
-                end
-            end
-        end
-    end
-end
-
-function faceDir(dir)   -- turn to direction (0=South, 1=East, 2=North, 3=West)
-    if(sanitizeDir(facingDir - 1) == dir) then
-            turnRight()
-    else
-        while (facingDir ~= dir) do
-            turnLeft()
-        end
-    end
-end
-
-function turnRight() -- turn right and update direction var
-    turtle.turnRight()
-    facingDir = sanitizeDir(facingDir - 1)
-end
-
-function turnLeft() -- turn left and update direction var
-    turtle.turnLeft()
-    facingDir = sanitizeDir(facingDir + 1)
-end
-
-function sanitizeDir(val) -- wraps a given value to it's correct cardinal direction going clockwise
-    while not (val <= 3 and val >= 0) do
-        if (val > 3) then
-            val = val - 4
-        elseif(val < 0) then
-            val = val + 4
-        end
-    end
-    return val
-end
-
-function goTo(x,y,z) -- navigates to given coords, disregarding blocks in the way
-    local curr = vector.new(gps.locate(10))
-    if not curr.x then
-        error("GPS Unavailable")
-    else
-        local dest = vector.new(x, y, z)
-        print("dest", dest:tostring())
-        print("curr", curr:tostring())
-        local diff = dest - curr
-        print("diff", diff:tostring())
-        
-        if (diff.y >= 0) then
-            up(diff.y)
+        if (i ~= width) then
+            local currCard = KAPI.getFacingCard()
+            KAPI.faceCard(turnCard)
+            checkInv()
+            moveHardWrap(0)
+            KAPI.faceCard(currCard + 2)
         else
-            down(-diff.y)
-        end
-        
-        if (diff.x >= 0) then
-            faceDir(1)
-            forward(diff.x)
-        else
-            faceDir(3)
-            forward(-diff.x)
-        end
-        
-        if (diff.z >= 0) then
-            faceDir(0)
-            forward(diff.z)
-        else
-            faceDir(2)
-            forward(-diff.z)
+            KAPI.faceCard(KAPI.getFacingCard() + 2)
         end
     end
-    faceDir(0)
-end
-
-function unload(doReturn) -- Attemps to unload inventory in storage above. set bool to true to resume digging after unloading
-    isUnloading = true
-    local currX, currY, currZ, currDir
-    if(doReturn) then
-        currDir = facingDir
-        currX,currY,currZ = gps.locate(10)
-    end
-    goTo(originX, originY, originZ)
-    local upBool, upData = turtle.inspectUp()
-    if (upData.name == "minecraft:chest") then
-        for i = 1, 16, 1 do
-            if(turtle.getItemCount(i) > 0) then
-                turtle.select(i)
-                if not(turtle.dropUp()) then
-                    error("Failed to unload slot:", i)
-                end
-            end
-        end
-        turtle.select(1)
-        invFull = false
-    else
-        error("Chest not found")
+    local pos = KAPI.updateLastPos()
+    if (pos.x == 0) then
+        noGPSHandler()
     end
     
-    if(doReturn) then
-        if not currX then
-            error("GPS Unavailable")
+end
+
+function checkInv() -- checks capacity and unloads if full. will return after it unloads
+    if (KAPI.checkIfFull()) then
+        local pos = KAPI.updateLastPos()
+        local currCard = KAPI.getFacingCard()
+        if (pos.x == 0) then
+            noGPSHandler()
         end
-        faceDir(startingDir)
-        forward(1)
-        goTo(currX, currY, currZ)
-        faceDir(currDir)
+        local originData = KAPI.getOrigin()
+        KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
+        KAPI.unload(unloadDir)
+        moveHardWrap(0)
+        KAPI.goTo(pos)
+        KAPI.faceCard(currCard)
     end
-    isUnloading = false
+end
+
+function moveHardWrap(dir)
+    if not KAPI.moveHard(dir) then
+        endMiningHandler()
+    end
+end
+
+function moveHardALotWrap(dir, amount)
+    if not KAPI.moveHardALot(dir, amount) then
+        endMiningHandler()
+    end
+end
+
+function endMiningHandler()
+    KAPI.logger("AmMinr: Failed to move, retreating to origin")
+    local originData = KAPI.getOrigin()
+    KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
+    KAPI.unload(unloadDir)
+    KAPI.logger("AmMinr: Ending program")
+    print("I've been a miner o7")
+    os.shutdown()
+end
+
+function noGPSHandler()
+    local originData = KAPI.getOrigin()
+    KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
+    KAPI.unload(unloadDir)
+    KAPI.logger("ERROR: Lost GPS signal")
+    error("Lost GPS signal")
 end
 
 --[Main]--
-print("Running AmMnr V1.0...")
-if not originX then
-    error("GPS Unavailable")
+print("Running AmMnr V2.0...")
+print("The turtle has to be facing South by default.")
+print("The turtle should have a regular chest on top of it.")
+
+print("Enter length of area:")
+length = tonumber(read())
+print("Enter width of area:")
+width = tonumber(read())
+print("Limit depth(0 for unlimited):")
+depth = tonumber(read())
+print("Offset depth:")
+offsetDepth = tonumber(read())
+print("Invert depth(y/n):")
+if (read() == "y") then
+    depthDir = 2
 end
 
-doWork = true
-print("Make sure the turtle has to be facing South.")
-print("Make sure to place a regular chest on top of turtle.")
-print("Enter length of quarry:")
-x = tonumber(read())
-print("Enter width of quarry:")
-y = tonumber(read())
 print("Other settings?(y/n):")
-otherSettings = read()
+if (read() == "y") then
+    
+    print("Starting cardinal(0=South, 1=East, 2=North, 3=West):")
+    local sCard = tonumber(read())
+    KAPI.setStartingCard(sCard)
+    print("Side of tool(left/right):")
+    KAPI.setToolHand(read())
+    print("Direction of width(3 for left, 1 for right):")
+    firstTurnCardArg = tonumber(read())
+    print("Unload direction(0-front, 1-down, 2-top, 3-back):")
+    unloadDir = tonumber(read())
+    print("Storage ID(blank for wooden chest):")
+    local sid = read()
+    if (sid ~="") then
+        KAPI.setStorageBlockID(sid)
+    end
 
-if (otherSettings == "y") then
-    print("Toolside:")
-    toolHand = read()
-    print("offcetY:")
-    offsetY = tonumber(read())
 end
+math.randomseed(os.time())
+os.setComputerLabel("Yellow Snow Co. Minr " .. math.random(1, 1000))
+KAPI.init()
+KAPI.logger("Starting AmMinr with these settings:")
+KAPI.logger("length: " .. length .. " width:" .. width)
+KAPI.logger("depth: " .. depth .. " offset_depth: " .. offsetDepth)
+if (depthDir == 2) then
+    KAPI.logger("Depth is inverted")
+else
+    KAPI.logger("Depth is NOT inverted")
+end
+KAPI.logger("Unload direction is: " .. unloadDir)
+turnCard = KAPI.sanitizeCard(KAPI.getStartingCard() + firstTurnCardArg)
+KAPI.logger("First turn will be in cardinal:" .. turnCard .. "\n" .. "---------------------------------------")
 
 print("HERE COMES THE MINER!")
-qTurningDir = sanitizeDir(startingDir + 3)
 
-forward(1)
-if (offsetY > 0)then
-    down(offsetY)
+moveHardWrap(0)
+if (offsetDepth > 0) then
+    moveHardALotWrap(depthDir, offsetDepth)
 end
-
-while (doWork) do 
-    local checkBool, checkData = turtle.inspectDown()
-
-    if (checkData.name == "minecraft:bedrock") then
-        unload(false)
-        doWork = false
-        print("TASK COMPLETE: I've been a miner o7")
-    else
-        if (invFull) then
-            unload(true)
-        end
-        down(1)
-        qTurningDir = sanitizeDir(qTurningDir + 2)
-        for i = 1,y,1 do
-            for j = 2,x,1 do
-                if (invFull) then
-                    unload(true)
-                end
-                forward(1)
-            end
-            if (i ~= y) then
-                local currDir = facingDir
-                faceDir(qTurningDir)
-                forward(1)
-                if (invFull) then
-                    unload(true)
-                end
-                faceDir(sanitizeDir(currDir + 2))
-            else
-                faceDir(sanitizeDir(facingDir + 2))
-            end
-        end
+if (depth > 0) then
+    for i = 1,depth,1 do
+        moveHardWrap(depthDir)
+        miner()
     end
+    endMiningHandler()
+else
+    while doWork do
+        moveHardWrap(depthDir)
+        miner()
+    end
+    endMiningHandler()
 end
