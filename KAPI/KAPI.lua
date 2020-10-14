@@ -15,6 +15,10 @@ function setProgName(str)
     progName = str
 end
 
+function getProgName()
+    return progName 
+end
+
 function setStartingCard(val)
     startingCard = sanitizeCard(val)
 end
@@ -31,12 +35,24 @@ function setMoveTimeout(val)
     moveTimeout = val
 end
 
+function getMoveTimeout()
+    return moveTimeout 
+end
+
 function setToolHand(str)
     toolHand = str
 end
 
+function getToolHand()
+    return toolHand
+end
+
 function setStorageBlockID(str)
     storageBlockID = str
+end
+
+function getStorageBlockID()
+    return storageBlockID 
 end
 
 function getOrigin()
