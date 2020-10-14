@@ -17,6 +17,8 @@ width = 0
 depth = 0
 doWork = true
 offsetDepth = 0
+offsetX = 0
+offsetZ = 0
 firstTurnCardArg = 3    --defalut dig to the left of start
 turnCard = nil
 unloadDir = 2
@@ -105,6 +107,10 @@ print("Limit depth(0 for unlimited):")
 depth = tonumber(read())
 print("Offset depth:")
 offsetDepth = tonumber(read())
+print("Offset X:")
+offsetX = tonumber(read())
+print("Offset Z:")
+offsetZ = tonumber(read())
 print("Invert depth(y/n):")
 if (read() == "y") then
     depthDir = 2
@@ -149,6 +155,15 @@ print("HERE COMES THE MINER!")
 moveHardWrap(0)
 if (offsetDepth > 0) then
     moveHardALotWrap(depthDir, offsetDepth)
+end
+if (offsetX > 0) then
+    KAPI.faceCard(KAPI.getStartingCard())
+    moveHardALotWrap(0, offsetX)
+end
+if (offsetZ > 0) then
+    KAPI.faceCard(firstTurnCardArg)
+    moveHardALotWrap(0, offsetZ)
+    KAPI.faceCard(KAPI.getStartingCard())
 end
 if (depth > 0) then
     for i = 1,depth,1 do
