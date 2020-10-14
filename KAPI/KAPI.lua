@@ -27,6 +27,10 @@ function getStartingCard()
     return startingCard 
 end
 
+function setFacingCard(val)
+    facingCard = sanitizeCard(val)
+end
+
 function getFacingCard()
     return facingCard 
 end
@@ -55,8 +59,20 @@ function getStorageBlockID()
     return storageBlockID 
 end
 
-function getOrigin()
-    return origin
+function setOriginVar(val)
+    origin = val
+end
+
+function getOriginVar()
+    return origin 
+end
+
+function setState(str)
+    emergencyState = str
+end
+
+function getState()
+    return emergencyState 
 end
 
 function init()
@@ -106,6 +122,18 @@ function logger(msg)   -- adds msg as timestamped line in log file
     end
     file.writeLine("[D:" .. os.day() .. " T:" .. textutils.formatTime( os.time(), true ) .. "]: " .. msg .. "\n")
     file.close()
+end
+
+function kill()     -- resets globals back to initial values
+    startingCard = 0                     
+    toolHand = "left"                     
+    storageBlockID = "minecraft:chest"    
+    facingCard = nil                      
+    progName = "KAPI"                       
+    origin = vector.new(0,0,0)              
+    moveTimeout = 10                       
+    emergencyState = false     
+    turtle.select(1)             
 end
 
 function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction, removing obsticles, will timeout. returns false on timeout
