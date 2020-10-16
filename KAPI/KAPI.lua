@@ -16,7 +16,7 @@ function setProgName(str)
 end
 
 function getProgName()
-    return progName 
+    return progName
 end
 
 function setStartingCard(val)
@@ -24,7 +24,7 @@ function setStartingCard(val)
 end
 
 function getStartingCard()
-    return startingCard 
+    return startingCard
 end
 
 function setFacingCard(val)
@@ -32,7 +32,7 @@ function setFacingCard(val)
 end
 
 function getFacingCard()
-    return facingCard 
+    return facingCard
 end
 
 function setMoveTimeout(val)
@@ -40,7 +40,7 @@ function setMoveTimeout(val)
 end
 
 function getMoveTimeout()
-    return moveTimeout 
+    return moveTimeout
 end
 
 function setToolHand(str)
@@ -56,7 +56,7 @@ function setStorageBlockID(str)
 end
 
 function getStorageBlockID()
-    return storageBlockID 
+    return storageBlockID
 end
 
 function setOriginVar(val)
@@ -64,7 +64,7 @@ function setOriginVar(val)
 end
 
 function getOriginVar()
-    return origin 
+    return origin
 end
 
 function setState(str)
@@ -72,7 +72,7 @@ function setState(str)
 end
 
 function getState()
-    return emergencyState 
+    return emergencyState
 end
 
 function init()
@@ -100,7 +100,7 @@ function init()
     else
         logger("Found origin at: " .. origin:tostring())
         logger("Updating  res/coords_origin...")
-        local file = fs.open("res/coords_origin", "w") 
+        local file = fs.open("res/coords_origin", "w")
         if (file == nil) then
             logger("\"!!!EXC: Could not update  res/coords_origin!!!\"")
         else
@@ -125,15 +125,15 @@ function logger(msg)   -- adds msg as timestamped line in log file
 end
 
 function kill()     -- resets globals back to initial values
-    startingCard = 0                     
-    toolHand = "right"                     
-    storageBlockID = "minecraft:chest"    
-    facingCard = nil                      
-    progName = "KAPI"                       
-    origin = vector.new(0,0,0)              
-    moveTimeout = 10                       
-    emergencyState = false     
-    turtle.select(1)             
+    turtle.select(1)
+    startingCard = 0
+    toolHand = "right"
+    storageBlockID = "minecraft:chest"
+    facingCard = nil
+    progName = "KAPI"
+    origin = vector.new(0,0,0)
+    moveTimeout = 10
+    emergencyState = false
 end
 
 function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction, removing obsticles, will timeout. returns false on timeout
@@ -213,7 +213,7 @@ function attack(dir)    -- (0-Front, 1-Down, 2-Up, 3-Back) returns true if succe
         faceCard(facingCard - 2)
         return succStatus
     end
-    
+
 end
 
 function dig(dir)   -- (0-Front, 1-Down, 2-Up, 3-Back) returns true if successful
@@ -226,7 +226,7 @@ function dig(dir)   -- (0-Front, 1-Down, 2-Up, 3-Back) returns true if successfu
         if (turtle.detectDown) then
             return (turtle.digDown(toolHand))
         end
-    end    
+    end
     if (dir == 2) then
         if (turtle.detectUp) then
             return (turtle.digUp(toolHand))
@@ -251,7 +251,7 @@ function updateLastPos() -- return vector of current position and updates file
     else
         logger("Current Position is: " .. pos:tostring())
         logger("Updating  res/coords_last_known...")
-        local file = fs.open("res/coords_last_known", "w") 
+        local file = fs.open("res/coords_last_known", "w")
         if (file == nil) then
             logger("\"!!!EXC: Could not update  res/coords_last_known!!!\"")
         else
@@ -418,6 +418,7 @@ end
 function unload(dir) -- Attemps to unload inventory in storage in direction (0-Front, 1-Down, 2-Up, 3-Back)
     logger("Attempting to unload in direction: " .. dir)
     local blockBool, blockData = turtle.inspectUp()
+    currCard = facingCard
     if(dir == 0) then
         blockBool, blockData = turtle.inspect()
     end
@@ -427,16 +428,11 @@ function unload(dir) -- Attemps to unload inventory in storage in direction (0-F
     if(dir == 2) then
         blockBool, blockData = turtle.inspectUp()
     end
-    if(dir == 3) then
+    if(dir == 3) then 
         faceCard(facingCard + 2)
         blockBool, blockData = turtle.inspect()
-        faceCard(facingCard - 2)
     end
     if (blockData.name == storageBlockID) then
-        currCard = facingCard
-        if(dir == 3) then
-            faceCard(facingCard + 2)
-        end
         for i = 1, 16, 1 do
             if(turtle.getItemCount(i) > 0) then
                 turtle.select(i)
@@ -504,29 +500,38 @@ end
 function place(dir)     -- TODO - skips if mob falls on top of it
     local slot = turtle.getSelectedSlot()
     if(dir == 0) then
-        if not turtle.compare(slot) then
+        if not turtle.compare(slot) then    -- TODO - what if we just ran out of blocks and try to do this compare?
             dig(dir)
             return turtle.place()
+        else
+            return true
         end
     end
     if(dir == 1) then
         if not turtle.compareDown(slot) then
             dig(dir)
             return turtle.placeDown()
+        else
+            return true
         end
     end
     if(dir == 2) then
         if not turtle.compareUp(slot) then
             dig(dir)
             return turtle.placeUp()
+        else
+            return true
         end
     end
     if(dir == 3) then
-        local succStatus = false    --TODO - will return false if compare true
+        local succStatus = false
         faceCard(facingCard + 2)
         if not turtle.compare(slot) then
             dig(0)
             succStatus = turtle.place()
+        else
+            faceCard(facingCard - 2)
+            return true
         end
         faceCard(facingCard - 2)
         return succStatus
