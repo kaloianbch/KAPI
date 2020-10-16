@@ -390,32 +390,109 @@ function testUnload()
     KAPI.unload(3)
     print("Did I unload back (y/n)?")
     assertEquals("testUnload_back", "y", read())
+
+    KAPI.dig(0)
+    KAPI.dig(1)
+    KAPI.dig(2)
+    KAPI.dig(3)
+    KAPI.kill()
 end
 
 -------------------------------------------------
 ---------------Movement Tests---------------
 function testMoveSoft()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Remove blocks above and in front of turtle")
+    read()
+    assertTrue("testMoveSoft_forwards_pass", KAPI.moveSoft(0))
+    assertTrue("testMoveSoft_backwards_pass", KAPI.moveSoft(3))
+    assertTrue("testMoveSoft_up_pass", KAPI.moveSoft(2))
+    assertTrue("testMoveSoft_down_pass", KAPI.moveSoft(1))
+    print("Place blocks in all movable directions")
+    read()
+    assertFalse("testMoveSoft_forwards_fail", KAPI.moveSoft(0))
+    assertFalse("testMoveSoft_backwards_fail", KAPI.moveSoft(3))
+    assertFalse("testMoveSoft_up_fail", KAPI.moveSoft(2))
+    assertFalse("testMoveSoft_down_fail", KAPI.moveSoft(1))
 end
 
 function testMoveSoftALot()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Remove blocks above and in front of turtle")
+    read()
+    assertTrue("testMoveSoftALot_forwards_pass", KAPI.moveSoftALot(0,2))
+    assertTrue("testMoveSoftALot_backwards_pass", KAPI.moveSoftALot(3,2))
+    assertTrue("testMoveSoftALot_up_pass", KAPI.moveSoftALot(2,2))
+    assertTrue("testMoveSoftALot_down_pass", KAPI.moveSoftALot(1,2))
+    print("Place blocks in all movable directions with a gap of 1 in front and above")
+    read()
+    assertFalse("testMoveSoftALot_forwards_fail", KAPI.moveSoftALot(0,2))
+    assertFalse("testMoveSoftALot_backwards_fail", KAPI.moveSoftALot(3,2))
+    assertFalse("testMoveSoftALot_up_fail", KAPI.moveSoftALot(2,2))
+    assertFalse("testMoveSoftALot_down_fail", KAPI.moveSoftALot(1,2))
 end
 
 function testMoveHard()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Place blocks above and in front of turtle")
+    read()
+    assertTrue("testMoveHard_forwards_pass", KAPI.moveHard(0))
+    assertTrue("testMoveHard_backwards_pass", KAPI.moveHard(3))
+    assertTrue("testMoveHard_up_pass", KAPI.moveHard(2))
+    assertTrue("testMoveHard_down_pass", KAPI.moveHard(1))
+    print("Place bedrock in all movable directions")
+    read()
+    assertFalse("testMoveHard_forwards_fail", KAPI.moveHard(0))
+    assertFalse("testMoveHard_backwards_fail", KAPI.moveHard(3))
+    assertFalse("testMoveHard_up_fail", KAPI.moveHard(2))
+    assertFalse("testMoveHard_down_fail", KAPI.moveHard(1))
+    KAPI.kill()
 end
 
 function testMoveHardALot()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Place blocks above and in front of turtle + 1")
+    read()
+    assertTrue("testMoveHardALot_forwards_pass", KAPI.moveHardALot(0,2))
+    assertTrue("testMoveHardALot_backwards_pass", KAPI.moveHardALot(3,2))
+    assertTrue("testMoveHardALot_up_pass", KAPI.moveHardALot(2,2))
+    assertTrue("testMoveHardALot_down_pass", KAPI.moveHardALot(1,2))
+    print("Place Bedrock in all movable directions with a gap of 1 in front and above")
+    read()
+    assertFalse("testMoveHardALot_forwards_fail", KAPI.moveHardALot(0,2))
+    assertFalse("testMoveHardALot_backwards_fail", KAPI.moveHardALot(3,2))
+    assertFalse("testMoveHardALot_up_fail", KAPI.moveHardALot(2,2))
+    assertFalse("testMoveHardALot_down_fail", KAPI.moveHardALot(1,2))
 end
 
 function testGoTo()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    local goPos = KAPI.updateLastPos()
+    goPos= vector.new(goPos.x + 2, goPos.y + 2, goPos.z + 2)
+    print("Turtle will go +2 in all directions\nGoing to: ".. goPos.x .. ', ' .. goPos.y .. ', ' .. goPos.z)
+    read()
+    KAPI.goTo(goPos)
+    print("Did I go +2 and am I facing the same direction? (y/n)")
+    assertEquals("testGoTo_positive", "y", read())
+
+    goPos = vector.new(goPos.x - 2, goPos.y - 2, goPos.z - 2)
+    print("Turtle will go -2 in all directions\nGoing to: ".. goPos.x .. ', ' .. goPos.y .. ', ' .. goPos.z)
+    read()
+    KAPI.goTo(goPos)
+    print("Did I go -2(starting position) and am I facing the same direction? (y/n)")
+    assertEquals("testGoTo_negative", "y", read())
+    KAPI.kill()
 end
 
---[Main]--
+--TODO - goTo recovery test
 
+--[Main]--
+--!!Do not skip the first 2 sections when writing new tests!!--
 --Setters/Getters--
 print("Place facing South")
 read()
@@ -440,8 +517,15 @@ testGetItemID()
 testFindItem()
 testChangeTo()
 testCheckIfFull()
---basic interactions--
+--Basic Interactions--
 testFaceCard()
 testAttack()
 testDig()
 testPlace()
+testUnload()
+--Movements--
+testMoveSoft()
+testMoveSoftALot()
+testMoveHard()
+testMoveHardALot()
+testGoTo()
