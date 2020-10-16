@@ -2,7 +2,7 @@
 
 --[Globals]--
 startingCard = 0                        -- (South = 0, East = 1, North = 2, West =3)
-toolHand = "left"                       -- side of the turtle with the tool
+toolHand = "right"                       -- side of the turtle with the tool
 storageBlockID = "minecraft:chest"      -- id of chest to unload inventory in
 facingCard = nil                        -- set by startingCard and updated by functions
 progName = "KAPI"                       -- name of program using KAPI
@@ -126,7 +126,7 @@ end
 
 function kill()     -- resets globals back to initial values
     startingCard = 0                     
-    toolHand = "left"                     
+    toolHand = "right"                     
     storageBlockID = "minecraft:chest"    
     facingCard = nil                      
     progName = "KAPI"                       
