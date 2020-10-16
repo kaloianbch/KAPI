@@ -2,11 +2,6 @@ if not (os.loadAPI("KAPI")) then
     error("Could not load KAPI")
 end
 
-KAPI.setProgName("Template")
---KAPI.setStartingCard(0)
---KAPI.setMoveTimeout(10)
---KAPI.setStorageBlockID("minecraft:chest")
-
 --[Constansts]--
 
 --[Globals]--
@@ -14,10 +9,11 @@ KAPI.setProgName("Template")
 --[Functions]--
 ---------------Epic Unit Test Framework---------------
 function failHandler(testName, expected, actual)
+    KAPI.kill()
     if actual ~= nil then
         error("Failed Test: " .. testName .. "\n" .. "expected: " .. expected .. " recieved: " .. actual)
     else if expected ~= nil then
-        error("Failed Test: " .. testName .. "\nexpected: not nil")
+        error("Failed Test: " .. testName .. "\n" .. "expected: " .. expected)
     end
         error("Failed Test: " .. testName)
     end
@@ -39,6 +35,14 @@ function assertNotNull(testName, actual)
     if nil ~= actual then
         passHandler(testName)
     else
+        failHandler(testName,"not nil")
+    end
+end
+
+function assertNull(testName, actual)
+    if nil == actual then
+        passHandler(testName)
+    else
         failHandler(testName,"nil")
     end
 end
@@ -47,7 +51,7 @@ function assertTrue(testName, actual)
     if actual then
         passHandler(testName)
     else
-        failHandler(testName,"expected: true")
+        failHandler(testName,"true")
     end
 end
 
@@ -55,7 +59,7 @@ function assertFalse(testName, actual)
     if not actual then
         passHandler(testName)
     else
-        failHandler(testName,"expected: false")
+        failHandler(testName,"false")
     end
 end
 
@@ -146,7 +150,7 @@ end
 function testInitArgs()
     KAPI.init()
     assertEquals("testInitArgs_startingCard", 0, KAPI.getStartingCard())
-    assertEquals("testInitArgs_toolHand", "left", KAPI.getToolHand())
+    assertEquals("testInitArgs_toolHand", "right", KAPI.getToolHand())
     assertEquals("testInitArgs_storageBlockID", "minecraft:chest", KAPI.getStorageBlockID())
     assertEquals("testInitArgs_facingCard", KAPI.getStartingCard(), KAPI.getFacingCard())
     assertEquals("testInitArgs_progName", "KAPI", KAPI.getProgName())
@@ -276,31 +280,116 @@ function testCheckIfFull()
     KAPI.init()
     assertTrue("testCheckIfFull", KAPI.checkIfFull)
     KAPI.kill()
-    print("Clean out inventory")
-    read()
 end
 
 
 -------------------------------------------------
 ---------------Basic Interactions Tests---------------
+function testFaceCard()
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    KAPI.faceCard(1)
+    print("Am I facing East (y/n)?")
+    assertEquals("testFaceCard_east", "y", read())
+    KAPI.faceCard(2)
+    print("Am I facing North (y/n)?")
+    assertEquals("testFaceCard_north", "y", read())
+    KAPI.faceCard(3)
+    print("Am I facing West (y/n)?")
+    assertEquals("testFaceCard_west", "y", read())
+    KAPI.faceCard(4)
+    print("Am I facing South (y/n)?")
+    assertEquals("testFaceCard_south", "y", read())
+    KAPI.kill()
+
+end
+
 function testAttack()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Place a chicken in all interaction directions")
+    read()
+    assertTrue("testAttack_pass_front", KAPI.attack(0))
+    assertTrue("testAttack_pass_down", KAPI.attack(1))
+    assertTrue("testAttack_pass_up", KAPI.attack(2))
+    assertTrue("testAttack_pass_back", KAPI.attack(3))
+    print("\"Remove\" the chickens please")
+    read()
+    assertFalse("testAttack_fail_front", KAPI.attack(0))
+    assertFalse("testAttack_fail_down", KAPI.attack(1))
+    assertFalse("testAttack_fail_up", KAPI.attack(2))
+    assertFalse("testAttack_fail_back", KAPI.attack(3))
+    KAPI.kill()
 end
 
 function testDig()
-    --
-end
-
-function testFaceCard()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Place dirt in all interactable directions")
+    read()
+    assertTrue("testDig_pass_front", KAPI.dig(0))
+    assertTrue("testDig_pass_down", KAPI.dig(1))
+    assertTrue("testDig_pass_up", KAPI.dig(2))
+    assertTrue("testDig_pass_back", KAPI.dig(3))
+    assertFalse("testDig_fail_front", KAPI.dig(0))
+    assertFalse("testDig_fail_down", KAPI.dig(1))
+    assertFalse("testDig_fail_up", KAPI.dig(2))
+    assertFalse("testDig_fail_back", KAPI.dig(3))
+    KAPI.kill()
 end
 
 function testPlace()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Put a 4 blocks of dirt and vanilla wooden planks in inv")
+    read()
+    KAPI.changeTo("minecraft:dirt")
+    assertTrue("testPlace_pass_front", KAPI.place(0))
+    assertTrue("testPlace_pass_down", KAPI.place(1))
+    assertTrue("testPlace_pass_up", KAPI.place(2))
+    assertTrue("testPlace_pass_back", KAPI.place(3))
+
+    assertTrue("testPlace_skip_front", KAPI.place(0))
+    assertTrue("testPlace_skip_down", KAPI.place(1))
+    assertTrue("testPlace_skip_up", KAPI.place(2))
+    assertTrue("testPlace_skip_back", KAPI.place(3))
+
+    KAPI.changeTo("minecraft:oak_planks")
+    assertTrue("testPlace_replace_front", KAPI.place(0))
+    assertTrue("testPlace_replace_down", KAPI.place(1))
+    assertTrue("testPlace_replace_up", KAPI.place(2))
+    assertTrue("testPlace_replace_back", KAPI.place(3))
+
+    KAPI.dig(0)
+    KAPI.dig(1)
+    KAPI.dig(2)
+    KAPI.dig(3)
+    KAPI.kill()
 end
 
 function testUnload()
-    --
+    KAPI.setProgName("KAPITEST")
+    KAPI.init()
+    print("Place vanilla chest in all interactable directions.\nPut something in the inventory after every unload.")
+    read()
+    KAPI.unload(0)
+    print("Did I unload front (y/n)?")
+    assertEquals("testUnload_front", "y", read())
+    print("Fill'er up!")
+    read()
+    KAPI.unload(1)
+    print("Did I unload down (y/n)?")
+    assertEquals("testUnload_down", "y", read())
+    print("Fill'er up!")
+    read()
+    KAPI.unload(2)
+    print("Did I unload up (y/n)?")
+    assertEquals("testUnload_up", "y", read())
+    print("Fill'er up!")
+    read()
+    KAPI.unload(3)
+    print("Did I unload back (y/n)?")
+    assertEquals("testUnload_back", "y", read())
 end
 
 -------------------------------------------------
@@ -328,6 +417,8 @@ end
 --[Main]--
 
 --Setters/Getters--
+print("Place facing South")
+read()
 testSetGetProgName()
 testSetGetStartingCard()
 testSetGetFacingCard()
@@ -349,3 +440,8 @@ testGetItemID()
 testFindItem()
 testChangeTo()
 testCheckIfFull()
+--basic interactions--
+testFaceCard()
+testAttack()
+testDig()
+testPlace()
