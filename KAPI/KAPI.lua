@@ -100,6 +100,7 @@ function init()
     else
         logger("Found origin at: " .. origin:tostring())
         logger("Updating  res/coords_origin...")
+        fs.delete("res/coords_origin")
         local file = fs.open("res/coords_origin", "w")
         if (file == nil) then
             logger("\"!!!EXC: Could not update  res/coords_origin!!!\"")
@@ -251,6 +252,7 @@ function updateLastPos() -- return vector of current position and updates file
     else
         logger("Current Position is: " .. pos:tostring())
         logger("Updating  res/coords_last_known...")
+        fs.delete("res/coords_last_known")
         local file = fs.open("res/coords_last_known", "w")
         if (file == nil) then
             logger("\"!!!EXC: Could not update  res/coords_last_known!!!\"")
@@ -348,7 +350,7 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
             logger("\"!!!ERROR: No valid last known position\"!!!")   -- TODO - attempt to send error back
             error("No valid last known position")
         end
-        noGPS = true
+        noGPS = true    --TODO - pretty sure this should be the point where we try to return to origin
     end
     local diff = dest - curr
     logger("Diffrence between positions: " .. diff:tostring())
@@ -385,7 +387,7 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
             succDigStatus = moveHardALot(0, -diff.z)
         end
     end
-    if (not succDigStatus) or noGPS then
+    if (not succDigStatus) or noGPS then    -- TODO - yeah this whole bit is uh not good. Just change the whole recovery procedure
         if not emergencyState then
             if(noGPS) then
                 logger("GPS lost, retreating to origin")
