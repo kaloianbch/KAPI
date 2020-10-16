@@ -109,7 +109,6 @@ function init()
             file.writeLine(origin.y)
             file.writeLine(origin.z)
             file.writeLine(startingCard)
-            logger("Successfuly updated")
         end
         file.close()
     end
@@ -135,6 +134,7 @@ function kill()     -- resets globals back to initial values
     origin = vector.new(0,0,0)
     moveTimeout = 10
     emergencyState = false
+    logger("KAPI has been killed")
 end
 
 function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction, removing obsticles, will timeout. returns false on timeout
@@ -256,14 +256,12 @@ function dig(dir)   -- (0-Front, 1-Down, 2-Up, 3-Back) returns true if successfu
 end
 
 function updateLastPos() -- return vector of current position and updates file
-    logger("Retrieving GPS position")
     local pos = vector.new(gps.locate(10))
 
     if (pos.x == 0) then
         logger("\"!!!EXC: GPS Unavailable!!!\"")
     else
-        logger("Current Position is: " .. pos:tostring())
-        logger("Updating  res/coords_last_known...")
+        logger("Updated position: " .. pos:tostring())
         fs.delete("res/coords_last_known")
         local file = fs.open("res/coords_last_known", "w")
         if (file == nil) then
@@ -273,7 +271,6 @@ function updateLastPos() -- return vector of current position and updates file
             file.writeLine(pos.y)
             file.writeLine(pos.z)
             file.writeLine(facingCard)
-            logger("Successfuly updated")
         end
         file.close()
     end
@@ -282,7 +279,6 @@ function updateLastPos() -- return vector of current position and updates file
 end
 
 function getLastPos() -- return last saved position from file
-    logger("Retrieving last saved position...")
     local x = 0
     local y = 0
     local z = 0
@@ -302,9 +298,7 @@ function getLastPos() -- return last saved position from file
 end
 
 function getOrigin() -- return last saved position from file
-    logger("Retrieving origin...")
     if (origin.x ~= 0) then
-        logger("Found at run-time variable...")
         return {origin.x, origin.y, origin.z, startingCard}
     end
     local x = 0
@@ -418,7 +412,6 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
         emergencyState = false
     end
     faceCard(startingCard)
-    logger("Arrived at destination")
 end
 
 function checkIfFull()
@@ -430,7 +423,7 @@ function checkIfFull()
 end
 
 function unload(dir) -- Attemps to unload inventory in storage in direction (0-Front, 1-Down, 2-Up, 3-Back)
-    logger("Attempting to unload in direction: " .. dir)
+    logger("Unloading in direction: " .. dir)
     local blockBool, blockData = turtle.inspectUp()
     currCard = facingCard
     if(dir == 0) then
@@ -468,7 +461,6 @@ function unload(dir) -- Attemps to unload inventory in storage in direction (0-F
         end
         faceCard(currCard)
         turtle.select(1)
-        logger("Unload Successful")
     else
         logger("\"!!!ERROR: Could not find chest that matches given ID:".. storageBlockID .. "!!!\"")
         error("Could not find chest that matches given ID:".. storageBlockID)
@@ -478,13 +470,12 @@ end
 function changeTo(id)   --changes to next slot with id item, returns false is fails
     local data = turtle.getItemDetail(turtle.getSelectedSlot())
     if (turtle.getItemCount() == 0 or data.name ~= id) then
-        logger("Trying to find  " .. id .. "  in inventory...")
         newSlot = KAPI.findItem(id)
         if (newSlot == 0) then
             logger("Failed to find more  " .. id)
             return false
         else
-            logger("Found more  " .. id .. "  in slot: " .. newSlot)
+            logger("Found " .. id .. "  in slot: " .. newSlot)
             turtle.select(newSlot)
             return true
         end
