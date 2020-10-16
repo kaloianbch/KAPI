@@ -140,16 +140,28 @@ end
 function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction, removing obsticles, will timeout. returns false on timeout
     -- dig(dir)
     local succStatus = moveSoft(dir)
+    local tempCard = nil
 
     if not (succStatus) then
+        if(dir == 3) then   -- if moving backwards and failing, just turn once till the timeout
+            tempCard = getFacingCard()
+            dir = 0
+            faceCard(tempCard + 2)
+        end
         for i = 1,moveTimeout,1 do
             if not dig(dir) then
                 attack(dir)
             end
             succStatus = moveSoft(dir)
             if (succStatus) then
+                if tempCard ~= nil then -- reset orientation in case we were moving backwards
+                    faceCard(tempCard)
+                end
                 break
             end
+        end
+        if tempCard ~= nil then -- reset orientation in case we were moving backwards
+            faceCard(tempCard)
         end
     end
     if not(succStatus) then
