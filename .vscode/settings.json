@@ -6,6 +6,7 @@
         "fs",
         "gps",
         "turtle",
-        "textutils"
+        "textutils",
+        "shell"
     ]
 }

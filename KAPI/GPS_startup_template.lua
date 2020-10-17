@@ -3,4 +3,4 @@
 -- guide for building the structure:
 -- (http://www.computercraft.info/forums2/index.php?/topic/3088-how-to-guide-gps-global-position-system/)
 shell.run("label","set","CHANGE")
-shell.run("gps", "host", x,y,z)
+shell.run("gps", "host", "X","Y","Z")
