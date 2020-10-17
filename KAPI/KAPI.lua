@@ -85,12 +85,12 @@ function init()
     file.close()
 
     logger("\n---------------------------------------\ninitializing KAPI:")
-    logger("  Start cardinal: " .. startingCard)
-    logger("  Program       : " .. progName)
-    logger("  Tool hand     : " .. toolHand)
-    logger("  Move timeout  : " .. moveTimeout)
-    logger("  Storage ID    : " .. storageBlockID)
-    logger("  GPS Origin attempt...")
+    logger("Start cardinal: " .. startingCard)
+    logger("Program       : " .. progName)
+    logger("Tool hand     : " .. toolHand)
+    logger("Move timeout  : " .. moveTimeout)
+    logger("Storage ID    : " .. storageBlockID)
+    logger("GPS Origin attempt...")
 
     facingCard = startingCard
     origin = vector.new(gps.locate(10))
@@ -99,7 +99,7 @@ function init()
         logger("\"ERROR: GPS Unavailable\"")
         error("GPS Unavailable")
     else
-        logger("  Origin    : " .. origin:tostring() .. "\n---------------------------------------")
+        logger("Origin    : " .. origin:tostring() .. "\n---------------------------------------")
         fs.delete("res/coords_origin")
         local file = fs.open("res/coords_origin", "w")
         if (file == nil) then
@@ -511,7 +511,7 @@ function take(dir) -- Attemps to take a stack from storage in direction until it
     end
 end
 
-function changeTo(id)   --changes to next slot with id item, returns false is fails
+function changeTo(id)   --changes to next slot with id item, returns false is fails, returns true on change or if already on that block
     local data = turtle.getItemDetail(turtle.getSelectedSlot())
     if (turtle.getItemCount() == 0 or data.name ~= id) then
         newSlot = KAPI.findItem(id)
@@ -523,6 +523,8 @@ function changeTo(id)   --changes to next slot with id item, returns false is fa
             turtle.select(newSlot)
             return true
         end
+    else
+        return true
     end
 end
 
@@ -547,10 +549,10 @@ function findItem(id)
 end
 
 function place(dir)     -- TODO - skips if mob falls on top of it
-    local slot = turtle.getSelectedSlot()
+    local slot = turtle.getSelectedSlot()  
     if(dir == 0) then
         if not turtle.compare(slot) then    -- TODO - what if we just ran out of blocks and try to do this compare?
-            dig(dir)
+            dig(dir)                        -- TODO - placeHARD
             return turtle.place()
         else
             return true
