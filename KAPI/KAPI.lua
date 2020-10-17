@@ -84,26 +84,26 @@ function init()
     file.writeLine("")
     file.close()
 
-    logger("initializing KAPI")
-    facingCard = startingCard
-    logger("Starting cardinal is: " .. facingCard)
-    logger("Program using KAPI: " .. progName)
-    logger("Tool hand is: " .. toolHand)
-    logger("Move attempt timeout is: " .. moveTimeout)
-    logger("Storage ID is: " .. storageBlockID .. "\n" .. "---------------------------------------")
+    logger("\n---------------------------------------\ninitializing KAPI:")
+    logger("  Start cardinal: " .. startingCard)
+    logger("  Program       : " .. progName)
+    logger("  Tool hand     : " .. toolHand)
+    logger("  Move timeout  : " .. moveTimeout)
+    logger("  Storage ID    : " .. storageBlockID)
+    logger("  GPS Origin attempt...")
 
+    facingCard = startingCard
     origin = vector.new(gps.locate(10))
 
     if (origin.x == 0) then
-        logger("\"!!!ERROR: GPS Unavailable!!!\"")
+        logger("\"ERROR: GPS Unavailable\"")
         error("GPS Unavailable")
     else
-        logger("Found origin at: " .. origin:tostring())
-        logger("Updating  res/coords_origin...")
+        logger("  Origin    : " .. origin:tostring() .. "\n---------------------------------------")
         fs.delete("res/coords_origin")
         local file = fs.open("res/coords_origin", "w")
         if (file == nil) then
-            logger("\"!!!EXC: Could not update  res/coords_origin!!!\"")
+            logger("\"EXC: Could not update  res/coords_origin\"")
         else
             file.writeLine(origin.x)
             file.writeLine(origin.y)
@@ -120,7 +120,8 @@ function logger(msg)   -- adds msg as timestamped line in log file
     if (file == nil) then
         error("Could not open log for:" .. progName)
     end
-    file.writeLine("[D:" .. os.day() .. " T:" .. textutils.formatTime( os.time(), true ) .. "]: " .. msg .. "\n")
+    -- file.writeLine("[D:" .. os.day() .. " T:" .. textutils.formatTime( os.time(), true ) .. "]: " .. msg .. "\n") -- cute, but really long
+    file.writeLine("[D:" .. os.day() .. "]: " .. msg .. "\n")
     file.close()
 end
 
@@ -134,7 +135,7 @@ function kill()     -- resets globals back to initial values
     origin = vector.new(0,0,0)
     moveTimeout = 10
     emergencyState = false
-    logger("KAPI has been killed")
+    logger("\n---------------------------------------\nResetting KAPI\n---------------------------------------")
 end
 
 function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction, removing obsticles, will timeout. returns false on timeout
@@ -167,9 +168,9 @@ function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction,
     if not(succStatus) then
         local pos = updateLastPos()
         if (pos.x ~= nil) then
-            logger("\"" .. "!!!EXC: Failed to hard move to block in direction: " .. dir .. " at position: " .. pos:tostring() .. "!!!\"")
+            logger("\"EXC: Failed to hard move at position: " .. pos:tostring() .. "\"")
         else
-            logger("\"" .. "!!!EXC: Failed to hard move to block in direction: " .. dir .. " at position: UNKOWN" .. "!!!\"")
+            logger("\"EXC: Failed to hard move at position: UNKOWN" .. "\"")
         end
     end
     return succStatus
@@ -259,13 +260,13 @@ function updateLastPos() -- return vector of current position and updates file
     local pos = vector.new(gps.locate(10))
 
     if (pos.x == 0) then
-        logger("\"!!!EXC: GPS Unavailable!!!\"")
+        logger("\"EXC: GPS Unavailable\"")
     else
         logger("Updated position: " .. pos:tostring())
         fs.delete("res/coords_last_known")
         local file = fs.open("res/coords_last_known", "w")
         if (file == nil) then
-            logger("\"!!!EXC: Could not update  res/coords_last_known!!!\"")
+            logger("\"EXC: Could not update  res/coords_last_known\"")
         else
             file.writeLine(pos.x)
             file.writeLine(pos.y)
@@ -285,13 +286,13 @@ function getLastPos() -- return last saved position from file
     local card = 0
     local file = fs.open("res/coords_last_known", "r")
     if (file == nil) then
-        logger("\"!!!EXC: Could not read  res/coords_last_known!!!\"")
+        logger("\"EXC: Could not read  res/coords_last_known\"")
     else
         x = file.readLine()
         y = file.readLine()
         z = file.readLine()
         card = file.readLine()
-        logger("Read from file: position: " .. x .. y .. z .. " cardinal: " .. card)
+        logger("\"Last location read from file:\"\n  \"coords: " .. x .. y .. z .. " cardinal: " .. card .."\"")
     end
     file.close()
     return {x, y, z, card}
@@ -307,13 +308,13 @@ function getOrigin() -- return last saved position from file
     local card = 0
     local file = fs.open("res/coords_origin", "r")
     if (file == nil) then
-        logger("\"!!!EXC: Could not read  res/coords_origin!!!\"")
+        logger("\"EXC: Could not read  res/coords_origin\"")
     else
         x = file.readLine()
         y = file.readLine()
         z = file.readLine()
         card = file.readLine()
-        logger("Read from file: origin: " .. x .. y .. z .. " cardinal: " .. card)
+        logger("\"Origin read from file:\"\n  \"coords: " .. x .. y .. z .. " cardinal: " .. card .."\"")
     end
     file.close()
     return {x, y, z, card}
@@ -353,7 +354,7 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
         curr.y = backup[2]
         curr.z = backup[3]
         if (curr.x == nil) then
-            logger("\"!!!ERROR: No valid last known position\"!!!")   -- TODO - attempt to send error back
+            logger("\"ERROR: No valid last known position\"")   -- TODO - attempt to send error back
             error("No valid last known position")
         end
         noGPS = true    --TODO - pretty sure this should be the point where we try to return to origin
@@ -405,7 +406,7 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
             goTo(vector.new(originBkUp[1], originBkUp[2], originBkUp[3]))
         else
             local curr = updateLastPos()
-            logger("\"" .. "!!!ERROR: Failed to return to origin. Current pos: " .. curr:tostring() .. "!!!\"")
+            logger("\"ERROR: Failed to return to origin. Current pos: " .. curr:tostring() .. "\"")
             error("Failed to return to origin" .. "\n" .. "Current pos: " .. curr:tostring())
         end
     else
@@ -453,7 +454,7 @@ function unload(dir) -- Attemps to unload inventory in storage in direction (0-F
                     succStatus = turtle.dropUp()
                 end
                 if not succStatus then
-                    logger("\"" .. "!!!ERROR: Failed to unload slot #: " .. i .."!!!\"")
+                    logger("\"ERROR: Failed to unload slot #: " .. i .."\"")
                     error("Failed to unload inventory slot #: " .. i)
                 end
             end
@@ -461,7 +462,7 @@ function unload(dir) -- Attemps to unload inventory in storage in direction (0-F
         faceCard(currCard)
         turtle.select(1)
     else
-        logger("\"!!!ERROR: Could not find unload chest that matches given ID:".. storageBlockID .. "!!!\"")
+        logger("\"ERROR: Could not find unload chest that matches given ID:".. storageBlockID .. "\"")
         error("Could not find unload chest that matches given ID:".. storageBlockID)
     end
 end
@@ -504,7 +505,7 @@ function take(dir) -- Attemps to take a stack from storage in direction until it
         turtle.select(1)
         logger("Grabbed " .. suckTimes .. " of slots from storage")
     else
-        logger("\"!!!ERROR: Could not find resource chest that matches given ID:".. storageBlockID .. "!!!\"")
+        logger("\"ERROR: Could not find resource chest that matches given ID:".. storageBlockID .. "\"")
         error("Could not find resource chest that matches given ID:".. storageBlockID)
     end
 end
