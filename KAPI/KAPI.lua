@@ -413,6 +413,7 @@ function goTo(dest) -- navigates to given coords, disregarding blocks in the way
         emergencyState = false
     end
     faceCard(startingCard)
+    updateLastPos()
 end
 
 function checkIfFull()
