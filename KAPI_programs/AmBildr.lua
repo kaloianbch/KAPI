@@ -18,6 +18,7 @@ WallBlock = ""
 FloorBlock = ""
 CeilingBlock = ""
 LightBlock = ""
+FloorLevels = {1}
 --[Functions]--
 function MoveHardWrap(dir)
     if not KAPI.moveHard(dir) then
@@ -35,31 +36,31 @@ function PlaceWrap(dir, isPlaceLight)   -- by default places wall on sides, floo
     if dir == 1 then
         if KAPI.changeTo(FloorBlock) then
             KAPI.place(dir)     --TODO replace with placeHARD
-        else
-            OutOfBlockHandler("floor")
+        else                    --TODO recovery bad when in middle of wall
+            OutOfBlockHandler("floor", dir, isPlaceLight)
         end
     elseif dir == 2 then
         if KAPI.changeTo(CeilingBlock) then
             KAPI.place(dir)
         else
-            OutOfBlockHandler("ceiling")
+            OutOfBlockHandler("ceiling", dir, isPlaceLight)
         end
     elseif isPlaceLight then
         if KAPI.changeTo(LightBlock) then
             KAPI.place(dir)
         else
-            OutOfBlockHandler("light")
+            OutOfBlockHandler("light", dir, isPlaceLight)
         end
     else
         if KAPI.changeTo(WallBlock) then
             KAPI.place(dir)
         else
-            OutOfBlockHandler("wall")
+            OutOfBlockHandler("wall", dir, isPlaceLight)
         end
     end
 end
 
-function OutOfBlockHandler(blockType)       --TODO unload maybe?
+function OutOfBlockHandler(blockType, dir, isPlaceLight)       --TODO unload maybe?
     KAPI.logger("\"Ran out of " .. blockType .. " blocks\"")
     local pos = KAPI.updateLastPos()
 
@@ -99,9 +100,10 @@ function OutOfBlockHandler(blockType)       --TODO unload maybe?
         LightBlock = ""
     end
 
-    MoveHardWrap(0)
+    MoveHardALotWrap(0,2)
     KAPI.goTo(pos)
     KAPI.faceCard(currCard)
+    PlaceWrap(dir, isPlaceLight)
 end
 
 function UnbreakableHandler()
@@ -115,6 +117,15 @@ function NoGPSHandler()
     KAPI.logger("ERROR: Lost GPS signal")
     KAPI.kill()
     error("Lost GPS signal")
+end
+
+function EndProgramHandler()
+    local origin = KAPI.getOrigin()
+    KAPI.goTo(vector.new(origin[1], origin[2], origin[3]))
+    KAPI.unload(StorageDirection)
+    KAPI.logger("*Building Completed, enjoy.")
+    print("Building Completed, enjoy.")
+    -- break in call loop
 end
 
 function RegisterBlocks()       -- sets building blocks from slots, if no ceiling block exists will use wall block and if no light block exists, no lights will be placed
@@ -146,7 +157,7 @@ function RegisterBlocks()       -- sets building blocks from slots, if no ceilin
     CeilingBlock = ceiling
 end
 
-function Setup()
+function Setup()    --TODO inverting Y
     print("Enter length of area:")
     XLength = tonumber(read())
     print("Enter width of area:")
@@ -160,10 +171,6 @@ function Setup()
     print("Offset Z:")
     ZOffset = tonumber(read())
     ]]
-    print("Invert height (y/n):")
-    if (read() == "y") then
-        YDirection = 1
-    end
     print("Direction of width(3 for left, 1 for right):")
     XDirection = tonumber(read())
 
@@ -195,19 +202,34 @@ function Setup()
     KAPI.logger("Wall Block   : " .. WallBlock)
     KAPI.logger("Floor Block  : " .. FloorBlock)
     KAPI.logger("Ceiling Block: " .. CeilingBlock)
-    KAPI.logger("Light Block  : " .. LightBlock .. "\n---------------------------------------")
+    KAPI.logger("Light Block  : " .. LightBlock)
+    local floorStr = ""
+    for key, val in pairs(FloorLevels) do
+        if key == 1 then
+            floorStr = floorStr .. val
+        else
+            floorStr = floorStr .. ", " .. val
+        end
+    end
+    KAPI.logger("Floor Levels : " .. floorStr .. "\n---------------------------------------")
 end
 
-function FloorCeilingCheck()
-    return nil -- TODO
-end
-
-function CornerCheck()
-    --TODO
-end
-
-function WallToSideCheck()
-    --TODO
+function DoSurface(dir, y) -- builds surface. 1 for floor, 2 for ceiling
+    KAPI.logger("Starting work on surface at y: " .. y .. " in direction: " .. dir)
+    local turnCard = XDirection
+    for x = 1, XLength, 1 do
+        PlaceWrap(dir)
+        for z = 1, ZLength - 1, 1 do
+            MoveHardWrap(0)
+            PlaceWrap(dir)
+        end
+        if x ~= XLength then
+            KAPI.faceCard(KAPI.getFacingCard() - turnCard)
+            MoveHardWrap(0)
+            KAPI.faceCard(KAPI.getFacingCard() - turnCard)
+            turnCard = KAPI.sanitizeCard(turnCard - 2)
+        end
+    end
 end
 
 function DoCorner()
@@ -236,6 +258,7 @@ end
 --[Main]--
 print("Running AmBildr V2.0(Bulldozer)...")
 print("The turtle should to be facing South by default.")
+print("The turtle will start building 2 blocks ahead to allow for storage access.")
 print("The turtle should have a vanilla wooden chest behind it.")
 print("The pickaxe should be on the right side of the turtle.")
 
@@ -258,30 +281,38 @@ if (ZOffset > 0) then
     KAPI.faceCard(KAPI.getStartingCard())
 end
 
-MoveHardWrap(0) -- Move to starting position
+MoveHardALotWrap(0,2) -- Move to starting position
+MoveHardWrap(KAPI.flipDirection(YDirection)) -- Move to starting position
 
-for y = 1, YLength, 1 do    --TODO item check
-    local fcCheck = FloorCeilingCheck()
-    if fcCheck ~= nil then  --if y is at the start or at the end
-        for x = 1, XLength, 1 do
-            CornerCheck()
-            for z = 3, ZLength, 1 do
-                WallToSideCheck()
+for y = 1, YLength + 2, 1 do    --TODO item check
+    local startCard = KAPI.getFacingCard()
+    WalkAndPlace(ZLength-2)
+    DoCorner()
+    WalkAndPlace(XLength-2)
+    DoCorner()
+    WalkAndPlace(ZLength-2)
+    DoCorner()
+    WalkAndPlace(XLength-2)
+    DoCorner()
+
+    KAPI.faceCard(startCard)
+    if(y == YLength + 2) then -- last surface(ceiling for now)
+        MoveHardWrap(KAPI.flipDirection(YDirection))
+        DoSurface(2, YLength)
+        EndProgramHandler()
+        break
+    end
+
+    MoveHardWrap(YDirection)
+    for key, val in pairs(FloorLevels) do -- first and other surfaces
+        if y == val then
+            DoSurface(1, y)
+            if XLength % 2 == 0 then
+                KAPI.faceCard(KAPI.getStartingCard() + XDirection)
+            else
+                KAPI.faceCard(KAPI.getStartingCard() + 2)
             end
-            CornerCheck()
-        end
-    else    -- if y is inbetween its start and end
-        local startCard = KAPI.getFacingCard()
-        WalkAndPlace(ZLength-2)
-        DoCorner()
-        WalkAndPlace(XLength-2)
-        DoCorner()
-        WalkAndPlace(ZLength-2)
-        DoCorner()
-        WalkAndPlace(XLength-2)
-        DoCorner()
-        MoveHardWrap(YDirection)
-        KAPI.faceCard(startCard)
+        end 
     end
 end
 
