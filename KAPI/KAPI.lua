@@ -166,12 +166,8 @@ function moveHard(dir) -- (0-Forwards, 1-Down, 2-Up, 3-Back) moves in direction,
         end
     end
     if not(succStatus) then
+        logger("\"EXC: Failed to hard move in direction: " .. dir .. "\"")
         local pos = updateLastPos()
-        if (pos.x ~= nil) then
-            logger("\"EXC: Failed to hard move at position: " .. pos:tostring() .. "\"")
-        else
-            logger("\"EXC: Failed to hard move at position: UNKOWN" .. "\"")
-        end
     end
     return succStatus
 end
