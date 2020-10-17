@@ -423,7 +423,6 @@ function checkIfFull()
 end
 
 function unload(dir) -- Attemps to unload inventory in storage in direction (0-Front, 1-Down, 2-Up, 3-Back)
-    logger("Unloading in direction: " .. dir)
     local blockBool, blockData = turtle.inspectUp()
     currCard = facingCard
     if(dir == 0) then
@@ -462,8 +461,51 @@ function unload(dir) -- Attemps to unload inventory in storage in direction (0-F
         faceCard(currCard)
         turtle.select(1)
     else
-        logger("\"!!!ERROR: Could not find chest that matches given ID:".. storageBlockID .. "!!!\"")
-        error("Could not find chest that matches given ID:".. storageBlockID)
+        logger("\"!!!ERROR: Could not find unload chest that matches given ID:".. storageBlockID .. "!!!\"")
+        error("Could not find unload chest that matches given ID:".. storageBlockID)
+    end
+end
+
+function take(dir) -- Attemps to take a stack from storage in direction until it's full (0-Front, 1-Down, 2-Up, 3-Back)
+    currCard = facingCard
+    local blockBool, blockData = turtle.inspectUp()
+    local suckStatus = false
+    local suckTimes = 0
+
+    if(dir == 0) then
+        blockBool, blockData = turtle.inspect()
+    end
+    if(dir == 1) then
+        blockBool, blockData = turtle.inspectDown()
+    end
+    if(dir == 2) then
+        blockBool, blockData = turtle.inspectUp()
+    end
+    if(dir == 3) then 
+        faceCard(facingCard + 2)
+        blockBool, blockData = turtle.inspect()
+    end
+    if (blockData.name == storageBlockID) then
+        repeat
+            if(dir == 0 or dir == 3) then
+                suckStatus = turtle.suck()
+            end
+            if(dir == 1) then
+                suckStatus = turtle.suckDown()
+             end
+            if(dir == 2) then
+                suckStatus = turtle.suckUp()
+            end
+            if suckStatus then
+                suckTimes = suckTimes + 1
+            end
+        until  not suckStatus
+        faceCard(currCard)
+        turtle.select(1)
+        logger("Grabbed " .. suckTimes .. " of slots from storage")
+    else
+        logger("\"!!!ERROR: Could not find resource chest that matches given ID:".. storageBlockID .. "!!!\"")
+        error("Could not find resource chest that matches given ID:".. storageBlockID)
     end
 end
 
@@ -472,10 +514,10 @@ function changeTo(id)   --changes to next slot with id item, returns false is fa
     if (turtle.getItemCount() == 0 or data.name ~= id) then
         newSlot = KAPI.findItem(id)
         if (newSlot == 0) then
-            logger("Failed to find more  " .. id)
+            logger("Failed to find " .. id)
             return false
         else
-            logger("Found " .. id .. "  in slot: " .. newSlot)
+            logger("Found " .. id .. " in slot: " .. newSlot)
             turtle.select(newSlot)
             return true
         end
