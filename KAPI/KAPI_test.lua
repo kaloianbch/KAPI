@@ -69,15 +69,22 @@ function TestCeilGPS() -- deprecated?
  end
  
  function TestSanitizeCard()
-    AssertEquals("testSanitizeCard", 3, -1)
-    AssertEquals("testSanitizeCard", 2, -2)
-    AssertEquals("testSanitizeCard", 1, -3)
-    AssertEquals("testSanitizeCard", 0, -4)
+    AssertEquals("testSanitizeCard_neg1", 3, KAPI.sanitizeCard(-1))
+    AssertEquals("testSanitizeCard_neg2", 2, KAPI.sanitizeCard(-2))
+    AssertEquals("testSanitizeCard_neg3", 1, KAPI.sanitizeCard(-3))
+    AssertEquals("testSanitizeCard_neg4", 0, KAPI.sanitizeCard(-4))
 
-    AssertEquals("testSanitizeCard", 0, 4)
-    AssertEquals("testSanitizeCard", 1, 5)
-    AssertEquals("testSanitizeCard", 2, 6)
-    AssertEquals("testSanitizeCard", 3, 7)
+    AssertEquals("testSanitizeCard_pos4", 0, KAPI.sanitizeCard(4))
+    AssertEquals("testSanitizeCard_pos5", 1, KAPI.sanitizeCard(5))
+    AssertEquals("testSanitizeCard_pos6", 2, KAPI.sanitizeCard(6))
+    AssertEquals("testSanitizeCard_pos7", 3, KAPI.sanitizeCard(7))
+ end
+ 
+ function TestFlipDirection()
+    AssertEquals("TestFlipDirection_front", 3, KAPI.flipDirection(0))
+    AssertEquals("TestFlipDirection_down", 2, KAPI.flipDirection(1))
+    AssertEquals("TestFlipDirection_up", 1, KAPI.flipDirection(2))
+    AssertEquals("TestFlipDirection_back", 0, KAPI.flipDirection(3))
  end
 -------------------------------------------------
 ---------------Getter/Setter Tests---------------
@@ -519,10 +526,13 @@ end
 --TODO - goTo recovery test
 
 --[Main]--
---!!Do not skip the first 2 sections when writing new tests!!--
---Setters/Getters--
+--!!Do not skip the first 3 sections when writing new tests!!--
 print("Place facing South")
 read()
+--Maths--
+TestSanitizeCard()
+TestFlipDirection()
+--Setters/Getters--
 TestSetGetProgName()
 TestSetGetStartingCard()
 TestSetGetFacingCard()

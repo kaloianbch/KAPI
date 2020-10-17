@@ -340,6 +340,23 @@ function sanitizeCard(val) -- wraps a given value to it's correct cardinal direc
     return val
 end
 
+function flipDirection(val) -- flips movement/interaction directions
+    if val == 0 then
+        return 3
+    end
+    if val == 1 then
+        return 2
+    end
+    if val == 2 then
+        return 1
+    end
+    if val == 3 then
+        return 0
+    end
+    logger("\"EXC: Cannot flip direction: " .. val)
+    return nil
+end
+
 function goTo(dest) -- navigates to given coords, disregarding blocks in the way. matches y, x and then z coordinate
     logger("Going to position: " .. dest:tostring())
     local curr = updateLastPos()
