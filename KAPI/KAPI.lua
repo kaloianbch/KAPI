@@ -360,17 +360,8 @@ end
 function GoTo(dest) -- navigates to given coords, disregarding blocks in the way. matches y, x and then z coordinate
     Logger("Going to position: " .. dest:tostring())
     local curr = UpdateLastPos()
-    local noGPS = false
     if (curr.x == 0) then
-        local backup = GetLastPos()
-        curr.x = backup[1]
-        curr.y = backup[2]
-        curr.z = backup[3]
-        if (curr.x == nil) then
-            Logger("\"ERROR: No valid last known position\"")   -- TODO - attempt to send error back
-            error("No valid last known position")
-        end
-        noGPS = true    --TODO - pretty sure this should be the point where we try to return to origin
+        error("GPS Unavailable")    --TODO - pretty sure this should be the point where we try to return to origin
     end
     local diff = dest - curr
     Logger("Diffrence between positions: " .. diff:tostring())
@@ -406,24 +397,6 @@ function GoTo(dest) -- navigates to given coords, disregarding blocks in the way
             FaceCard(2)
             succDigStatus = MoveHardALot(0, -diff.z)
         end
-    end
-    if (not succDigStatus) or noGPS then    -- TODO - yeah this whole bit is uh not good. Just change the whole recovery procedure
-        if not EmergencyState then
-            if(noGPS) then
-                Logger("GPS lost, retreating to origin")
-            else
-                Logger("Failed to go to destination, retreating to origin")
-            end
-            EmergencyState = true
-            local originBkUp = GetOrigin()
-            GoTo(vector.new(originBkUp[1], originBkUp[2], originBkUp[3]))
-        else
-            local curr = UpdateLastPos()
-            Logger("\"ERROR: Failed to return to origin. Current pos: " .. curr:tostring() .. "\"")
-            error("Failed to return to origin" .. "\n" .. "Current pos: " .. curr:tostring())
-        end
-    else
-        EmergencyState = false
     end
     FaceCard(StartingCard)
     UpdateLastPos()
