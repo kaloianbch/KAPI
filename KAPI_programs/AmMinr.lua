@@ -2,95 +2,95 @@ if not (os.loadAPI("KAPI")) then
     error("Could not load KAPI")
 end
 
-KAPI.setProgName("AmMnr")
---KAPI.setStartingCard(0)
---KAPI.setMoveTimeout(10)
---KAPI.setToolHand("left")
---KAPI.setStorageBlockID("minecraft:chest")
+KAPI.SetProgName("AmMnr")
+--KAPI.SetStartingCard(0)
+--KAPI.SetMoveTimeout(10)
+--KAPI.SetToolHand("left")
+--KAPI.SetStorageBlockID("minecraft:chest")
 
 --[Constansts]--
 
 --[Globals]--
-depthDir = 1
-length = 0
-width = 0
-depth = 0
-doWork = true
-offsetDepth = 0
-offsetX = 0
-offsetZ = 0
-firstTurnCardArg = 3    --defalut dig to the left of start
-turnCard = nil
-unloadDir = 2
+DepthDir = 1
+Length = 0
+Width = 0
+Depth = 0
+DoWork = true
+OffsetDepth = 0
+OffsetX = 0
+OffsetZ = 0
+FirstTurnCardArg = 3    --defalut Dig to the left of start
+TurnCard = nil
+UnloadDir = 2
 
 --[Functions]--
-function miner() -- Main function
-    turnCard = KAPI.sanitizeCard(turnCard + 2)
-    for i = 1,width,1 do
-        for j = 2,length,1 do
-            checkInv()
-            moveHardWrap(0)
+function Miner() -- Main function
+    TurnCard = KAPI.SanitizeCard(TurnCard + 2)
+    for i = 1,Width,1 do
+        for j = 2,Length,1 do
+            CheckInv()
+            MoveHardWrap(0)
         end
-        if (i ~= width) then
-            local currCard = KAPI.getFacingCard()
-            KAPI.faceCard(turnCard)
-            checkInv()
-            moveHardWrap(0)
-            KAPI.faceCard(currCard + 2)
+        if (i ~= Width) then
+            local currCard = KAPI.GetFacingCard()
+            KAPI.FaceCard(TurnCard)
+            CheckInv()
+            MoveHardWrap(0)
+            KAPI.FaceCard(currCard + 2)
         else
-            KAPI.faceCard(KAPI.getFacingCard() + 2)
+            KAPI.FaceCard(KAPI.GetFacingCard() + 2)
         end
     end
-    local pos = KAPI.updateLastPos()
+    local pos = KAPI.UpdateLastPos()
     if (pos.x == 0) then
-        noGPSHandler()
+        NoGPSHandler()
     end
     
 end
 
-function checkInv() -- checks capacity and unloads if full. will return after it unloads
-    if (KAPI.checkIfFull()) then
-        local pos = KAPI.updateLastPos()
-        local currCard = KAPI.getFacingCard()
+function CheckInv() -- checks capacity and Unloads if full. will return after it Unloads
+    if (KAPI.CheckIfFull()) then
+        local pos = KAPI.UpdateLastPos()
+        local currCard = KAPI.GetFacingCard()
         if (pos.x == 0) then
-            noGPSHandler()
+            NoGPSHandler()
         end
-        local originData = KAPI.getOrigin()
-        KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
-        KAPI.unload(unloadDir)
-        moveHardWrap(0)
-        KAPI.goTo(pos)
-        KAPI.faceCard(currCard)
+        local originData = KAPI.GetOrigin()
+        KAPI.GoTo(vector.new(originData[1], originData[2], originData[3]))
+        KAPI.Unload(UnloadDir)
+        MoveHardWrap(0)
+        KAPI.GoTo(pos)
+        KAPI.FaceCard(currCard)
     end
 end
 
-function moveHardWrap(dir)
-    if not KAPI.moveHard(dir) then
-        endMiningHandler()
+function MoveHardWrap(dir)
+    if not KAPI.MoveHard(dir) then
+        EndMiningHandler()
     end
 end
 
-function moveHardALotWrap(dir, amount)
-    if not KAPI.moveHardALot(dir, amount) then
-        endMiningHandler()
+function MoveHardALotWrap(dir, amount)
+    if not KAPI.MoveHardALot(dir, amount) then
+        EndMiningHandler()
     end
 end
 
-function endMiningHandler()
-    KAPI.logger("AmMinr: Failed to move, retreating to origin")
-    local originData = KAPI.getOrigin()
-    KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
-    KAPI.unload(unloadDir)
-    KAPI.logger("AmMinr: Ending program")
+function EndMiningHandler()
+    KAPI.Logger("AmMinr: Failed to move, retreating to origin")
+    local originData = KAPI.GetOrigin()
+    KAPI.GoTo(vector.new(originData[1], originData[2], originData[3]))
+    KAPI.Unload(UnloadDir)
+    KAPI.Logger("AmMinr: Ending program")
     print("I've been a miner o7")
     os.shutdown()
 end
 
-function noGPSHandler()
-    local originData = KAPI.getOrigin()
-    KAPI.goTo(vector.new(originData[1], originData[2], originData[3]))
-    KAPI.unload(unloadDir)
-    KAPI.logger("ERROR: Lost GPS signal")
+function NoGPSHandler()
+    local originData = KAPI.GetOrigin()
+    KAPI.GoTo(vector.new(originData[1], originData[2], originData[3]))
+    KAPI.Unload(UnloadDir)
+    KAPI.Logger("ERROR: Lost GPS signal")
     error("Lost GPS signal")
 end
 
@@ -100,20 +100,20 @@ print("The turtle has to be facing South by default.")
 print("The turtle should have a regular chest on top of it.")
 
 print("Enter length of area:")
-length = tonumber(read())
+Length = tonumber(read())
 print("Enter width of area:")
-width = tonumber(read())
+Width = tonumber(read())
 print("Limit depth(0 for unlimited):")
-depth = tonumber(read())
+Depth = tonumber(read())
 print("Offset depth:")
-offsetDepth = tonumber(read())
+OffsetDepth = tonumber(read())
 print("Offset X:")
-offsetX = tonumber(read())
+OffsetX = tonumber(read())
 print("Offset Z:")
-offsetZ = tonumber(read())
+OffsetZ = tonumber(read())
 print("Invert depth(y/n):")
 if (read() == "y") then
-    depthDir = 2
+    DepthDir = 2
 end
 
 print("Other settings?(y/n):")
@@ -121,60 +121,60 @@ if (read() == "y") then
     
     print("Starting cardinal(0=South, 1=East, 2=North, 3=West):")
     local sCard = tonumber(read())
-    KAPI.setStartingCard(sCard)
+    KAPI.SetStartingCard(sCard)
     print("Side of tool(left/right):")
-    KAPI.setToolHand(read())
+    KAPI.SetToolHand(read())
     print("Direction of width(3 for left, 1 for right):")
-    firstTurnCardArg = tonumber(read())
+    FirstTurnCardArg = tonumber(read())
     print("Unload direction(0-front, 1-down, 2-top, 3-back):")
-    unloadDir = tonumber(read())
+    UnloadDir = tonumber(read())
     print("Storage ID(blank for wooden chest):")
     local sid = read()
     if (sid ~="") then
-        KAPI.setStorageBlockID(sid)
+        KAPI.SetStorageBlockID(sid)
     end
 
 end
 math.randomseed(os.time())
 os.setComputerLabel("Yellow Snow Co. Minr " .. math.random(1, 1000))
-KAPI.init()
-KAPI.logger("Starting AmMinr with these settings:")
-KAPI.logger("length: " .. length .. " width:" .. width)
-KAPI.logger("depth: " .. depth .. " offset_depth: " .. offsetDepth)
-if (depthDir == 2) then
-    KAPI.logger("Depth is inverted")
+KAPI.Init()
+KAPI.Logger("Starting AmMinr with these settings:")
+KAPI.Logger("length: " .. Length .. " width:" .. Width)
+KAPI.Logger("depth: " .. Depth .. " offset_depth: " .. OffsetDepth)
+if (DepthDir == 2) then
+    KAPI.Logger("Depth is inverted")
 else
-    KAPI.logger("Depth is NOT inverted")
+    KAPI.Logger("Depth is NOT inverted")
 end
-KAPI.logger("Unload direction is: " .. unloadDir)
-turnCard = KAPI.sanitizeCard(KAPI.getStartingCard() + firstTurnCardArg)
-KAPI.logger("First turn will be in cardinal:" .. turnCard .. "\n" .. "---------------------------------------")
+KAPI.Logger("Unload direction is: " .. UnloadDir)
+TurnCard = KAPI.SanitizeCard(KAPI.GetStartingCard() + FirstTurnCardArg)
+KAPI.Logger("First turn will be in cardinal:" .. TurnCard .. "\n" .. "---------------------------------------")
 
 print("HERE COMES THE MINER!")
 
-moveHardWrap(0)
-if (offsetDepth > 0) then
-    moveHardALotWrap(depthDir, offsetDepth)
+MoveHardWrap(0)
+if (OffsetDepth > 0) then
+    MoveHardALotWrap(DepthDir, OffsetDepth)
 end
-if (offsetX > 0) then
-    KAPI.faceCard(KAPI.getStartingCard())
-    moveHardALotWrap(0, offsetX)
+if (OffsetX > 0) then
+    KAPI.FaceCard(KAPI.GetStartingCard())
+    MoveHardALotWrap(0, OffsetX)
 end
-if (offsetZ > 0) then
-    KAPI.faceCard(firstTurnCardArg)
-    moveHardALotWrap(0, offsetZ)
-    KAPI.faceCard(KAPI.getStartingCard())
+if (OffsetZ > 0) then
+    KAPI.FaceCard(FirstTurnCardArg)
+    MoveHardALotWrap(0, OffsetZ)
+    KAPI.FaceCard(KAPI.GetStartingCard())
 end
-if (depth > 0) then
-    for i = 1,depth,1 do
-        moveHardWrap(depthDir)
-        miner()
+if (Depth > 0) then
+    for i = 1,Depth,1 do
+        MoveHardWrap(DepthDir)
+        Miner()
     end
-    endMiningHandler()
+    EndMiningHandler()
 else
-    while doWork do
-        moveHardWrap(depthDir)
-        miner()
+    while DoWork do
+        MoveHardWrap(DepthDir)
+        Miner()
     end
-    endMiningHandler()
+    EndMiningHandler()
 end
